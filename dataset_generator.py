@@ -21,7 +21,7 @@ def generate_samples(M, n_min, n_max, path):
         plt.plot(x, y, 'o')
         xs += x
         ys += y
-    target = [random.random(), random.random()]
+    target = (random.random(), random.random())
     plt.plot(target[0], target[1], 'x')
     plt.suptitle('Size: ' + str(n_total) + ', n_min: ' + str(n_min) + ', n_max: ' + str(n_max), fontsize=24, y=.95)
     plt.title('x: target point\ndifferent colors denote different classes', fontsize=12)
@@ -55,11 +55,11 @@ def generate_dataset(N, M, n_min, n_max):
         print('Iteration: ' + str(i))
         path = 'data/sample_' + str(i)
         samples.append(generate_samples(M, n_min, n_max, path))
-        with open(path + '.json', 'w') as file:
-            json.dump(samples, file, indent=2)
+    with open('data/dataset.json', 'w') as file:
+        json.dump(samples, file, indent=2)
 
 if __name__ == '__main__':
-    N = 100
+    N = 5 #FIXME This is 100! --- not factorial...
     M = 10
     n_min = 0
     n_max = 30
