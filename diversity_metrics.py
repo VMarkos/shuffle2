@@ -20,7 +20,7 @@ def cosine_simlarity(x, y):
 def richness(class_distribution):
     return len(class_distribution)
 
-def berger_praker_index(class_distribution):
+def berger_parker_index(class_distribution):
     size = sum(class_distribution)
     return max(class_distribution) / size
 
@@ -38,7 +38,7 @@ def hill_numbers(class_distribution, q=2):
         return math.exp(shannon_index(class_distribution))
     return sum([(x / size) ** q for x in class_distribution]) ** (1 / (1 - q))
 
-def euclidean_diversity(sample, similarity, weights=None):
+def similarity_diversity(sample, similarity, weights=None):
     n = len(sample)
     d = len(sample[0])
     diversity = 0
@@ -53,3 +53,5 @@ def euclidean_diversity(sample, similarity, weights=None):
         for j in range(i):
             diversity += weights[i][j] * similarity(sample[i], sample[j])
     return diversity
+
+    # TODO Do not forget to conduct experiments using similarity based diversity!

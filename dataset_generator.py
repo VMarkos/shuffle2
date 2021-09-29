@@ -10,14 +10,18 @@ def generate_samples(M, n_min, n_max, path):
     ys = []
     n_total = 0
     class_distribution = []
+    classes = {}
     plt.xlim([-.05, 1.05])
     plt.ylim([-.05, 1.05])
-    for center in centers:
+    for i in range(len(centers)):
+        center = centers[i]
         n = random.randint(n_min, math.floor(n_min + (n_max - n_min) / 2)) + random.randint(0, math.ceil((n_max - n_min) / 2))
         n_total += n
         class_distribution.append(n)
         max_r = min([max(abs(center[0] - x[0]), abs(center[1] - x[1])) / 2 for x in centers if x != center] + [center[0], center[1], 1 - center[0], 1 - center[1]])
         (x, y) = generate_blob(center, max_r, n)
+        for i in range(len(x)):
+            classes[str(x[i]) + ',' + str(y[i])] = n
         plt.plot(x, y, 'o')
         xs += x
         ys += y
@@ -37,6 +41,7 @@ def generate_samples(M, n_min, n_max, path):
         'size': n_total,
         'target': target,
         'classCount': class_distribution,
+        'classes': classes,
     }
 
 def generate_blob(center, max_r, n):
@@ -59,7 +64,7 @@ def generate_dataset(N, M, n_min, n_max):
         json.dump(samples, file, indent=2)
 
 if __name__ == '__main__':
-    N = 5 #FIXME This is 100! --- not factorial...
+    N = 100
     M = 10
     n_min = 0
     n_max = 30
