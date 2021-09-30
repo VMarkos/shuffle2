@@ -20,8 +20,8 @@ def generate_samples(M, n_min, n_max, path):
         class_distribution.append(n)
         max_r = min([max(abs(center[0] - x[0]), abs(center[1] - x[1])) / 2 for x in centers if x != center] + [center[0], center[1], 1 - center[0], 1 - center[1]])
         (x, y) = generate_blob(center, max_r, n)
-        for i in range(len(x)):
-            classes[str(x[i]) + ',' + str(y[i])] = n
+        for j in range(len(x)):
+            classes[str(x[j]) + ',' + str(y[j])] = i
         plt.plot(x, y, 'o')
         xs += x
         ys += y
