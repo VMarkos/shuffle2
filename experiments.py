@@ -16,7 +16,7 @@ def dist(mu, D_mu):
 
 def sort_by(mu, D_mu, X, mu_rank, classes):
     distances = {x: dist(mu(get_distribution(mu_rank + [x], classes)), D_mu) for x in X if x not in mu_rank}
-    return list({x: val for x, val in sorted(distances.items(), key=lambda item: item[1])}.keys())
+    return list({x: val for x, val in sorted(distances.items(), key=lambda item: item[1], reverse=True)}.keys())
 
 def get_distribution(points, classes):
     distribution = [0] * len(classes)
@@ -39,18 +39,15 @@ While (front != empty && len(X) > len(muRank)):
 
 def shuffle2(sample, d_max, d_div, diversity_metric, crisp_ranking): # NON-recursive version of Shuffle2 algorithm
     X = get_points(sample)
-    # class_distribution = sample['classCount']
     classes = sample['classes']
     mu_rank = []
     front = sort_by(diversity_metric, d_div, X, mu_rank, classes)
     while (len(front) > 0 and len(X) > len(mu_rank)):
         next_el = front.pop()
-        # print('next_el: ', next_el)
         mu_rank.append(next_el)
         if normalized_ell_1(crisp_ranking, mu_rank) > d_max:
             mu_rank.pop()
         else:
-            class_distribution = update_class_distribution(X, mu_rank, classes)
             front += sort_by(diversity_metric, d_div, X, mu_rank, classes)
     if len(X) == len(mu_rank):
         return mu_rank

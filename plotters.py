@@ -14,7 +14,7 @@ def successful_rankings_3d_plotter(results, method_name):
     for experiment in results:
         total = len(experiment) / 100
         for sample in experiment:
-            if sample['mu_ranking'] != None:
+            if sample['mu_ranking'] != None and sample['d_max'] != 0:
                 hits[int(sample['d_div'] * 20)][int(sample['d_max'] * 20)] += 1 / total
     x = [[i / 20] * 21 for i in range(21)]
     y = [[i / 20 for i in range(21)]] * 21
@@ -22,10 +22,10 @@ def successful_rankings_3d_plotter(results, method_name):
     ax = fig.add_subplot(projection='3d')
     ax.scatter(x, y, hits, marker='o')
     [ax.plot(x[i], y[i], hits[i], color=(i / 20, 0.0, 0.0)) for i in range(21)]
-    ax.set_title('% of complete rankings against $d_{div}$ and $d_{max}$ (' + method_name + ')')
+    ax.set_title('% of complete shufflings against $d_{div}$ and $d_{max}$ (' + method_name + ')')
     ax.set_xlabel('$d_{div}$')
     ax.set_ylabel('$d_{max}$')
-    ax.set_zlabel('% of complete rankings')
+    ax.set_zlabel('% of complete shufflings')
     plt.savefig(method_name.replace(' ', '_') + '_3d_hits.png')
     plt.close()
 
@@ -35,7 +35,7 @@ def successful_rankings_plotter(results, method_name):
     for experiment in results:
         total = len(experiment) * 21 / 100
         for sample in experiment:
-            if sample['mu_ranking'] != None:
+            if sample['mu_ranking'] != None and sample['d_max'] != 0:
                 d_div_hits[int(sample['d_div'] * 20)] += 1 / total
                 d_max_hits[int(sample['d_max'] * 20)] += 1 / total
     x = [i / 20 for i in range(0, 21)]
@@ -51,19 +51,19 @@ def successful_rankings_plotter(results, method_name):
     plt.grid()
     plt.plot(x, d_div_hits, 'o')
     plt.plot([0, 1], [div_intercept, div_intercept + div_slope], 'r-', label='Intercept: ' + str(div_intercept) + '\nSlope: ' + str(div_slope[0]) + '\n$R^2$: ' + str(div_r_sq))
-    plt.title('% of complete rankings against $d_{div}$ (' + method_name + ')')
+    plt.title('% of complete shufflings against $d_{div}$ (' + method_name + ')')
     plt.legend()
     plt.xlabel('$d_{div}$')
-    plt.ylabel('% of complete rankings')
+    plt.ylabel('% of complete shufflings')
     plt.savefig(method_name.replace(' ', '_') + '_d_div_hits.png')
     plt.close()
     # Ranking against d_max
     plt.xlim([-.05, 1.05])
-    plt.ylim([0, 105])
+    plt.ylim([-5, 105])
     # print(d_max_hits)
-    first_max = d_max_hits[1:].index(max(d_max_hits)) + 1
-    trunc_npx = np.array(x[1:first_max]).reshape((-1,1))
-    npmax = np.array(d_max_hits[1:first_max])
+    first_max = d_max_hits.index(max(d_max_hits)) + 1
+    trunc_npx = np.array(x[:first_max]).reshape((-1,1))
+    npmax = np.array(d_max_hits[:first_max])
     max_model = LinearRegression().fit(trunc_npx, npmax)
     max_r_sq = max_model.score(trunc_npx, npmax)
     max_intercept = max_model.intercept_
@@ -73,9 +73,9 @@ def successful_rankings_plotter(results, method_name):
     plt.grid()
     plt.plot(xs, ys, 'r-', label='Intercept: ' + str(max_intercept) + '\nSlope: ' + str(max_slope[0]) + '\n$R^2$: ' + str(max_r_sq))
     plt.plot(x, d_max_hits, 'o')
-    plt.title('% of complete rankings against $d_{max}$ (' + method_name + ')')
+    plt.title('% of complete shufflings against $d_{max}$ (' + method_name + ')')
     plt.xlabel('$d_{max}$')
-    plt.ylabel('% of complete rankings')
+    plt.ylabel('% of complete shufflings')
     plt.legend()
     plt.savefig(method_name.lower().replace(' ', '_') + '_d_max_hits.png')
     plt.close()
