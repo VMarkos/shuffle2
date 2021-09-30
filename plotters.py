@@ -71,7 +71,7 @@ def successful_rankings_plotter(results, method_name):
     xs = [i / 100 for i in range(101)]
     ys = [min(max_intercept + max_slope * xi, 100) for xi in xs]
     plt.grid()
-    plt.plot(xs, ys, 'r-', label='Intercept: ' + str(max_intercept) + '\nSlope: ' + str(max_slope) + '\n$R^2$: ' + str(max_r_sq))
+    plt.plot(xs, ys, 'r-', label='Intercept: ' + str(max_intercept) + '\nSlope: ' + str(max_slope[0]) + '\n$R^2$: ' + str(max_r_sq))
     plt.plot(x, d_max_hits, 'o')
     plt.title('% of complete rankings against $d_{max}$ (' + method_name + ')')
     plt.xlabel('$d_{max}$')
@@ -122,40 +122,53 @@ def calculate_distribution(ranking, classes):
     n = int(max(list(classes.values()))) + 1
     distribution = [0] * n
     for point in ranking:
-        distribution[classes[[str(point[0]) + str(point[1])]]] +=1
+        distribution[classes[str(point[0]) + ',' + str(point[1])]] +=1
     return distribution
 
-def diversity_loss_plotter(results, method_name, diversity_metric, classes):
+def diversity_loss_plotter(results, method_name, diversity_metric, data):
     total = 0
     desired_length = 15
     avg_ranking_loss = [0.0] * desired_length
     for experiment in results:
-        for sample in experiment:
+        for i in range(len(experiment)):
+            sample = experiment[i]
+            data_sample = data[i]
             mu_rank = sample['mu_ranking']
-            if len(mu_rank) < desired_length:
-                total -= 1
+            classes = data_sample['classes']
+            # print(mu_rank)
+            if mu_rank == None or len(mu_rank) < desired_length:
                 continue
             total += 1
-            for i in range(1, desired_length + 1):
-                avg_ranking_loss[i] += diversity_metric(calculate_distribution(mu_rank[:i], classes)) - sample['d_div']
+            for i in range(desired_length):
+                avg_ranking_loss[i] += diversity_metric(calculate_distribution(mu_rank[:i + 1], classes)) - sample['d_div']
     avg_ranking_loss = [x / total for x in avg_ranking_loss]
-    x = [x / 20 for x in range(21)]
-    plt.plot(x, avg_ranking_loss, 'bo-')
-    plt.show()
+    x = [i for i in range(1, 16)]
+    plt.grid()
+    plt.plot(x, avg_ranking_loss, 'bo-', label='Average Diversity Loss')
+    plt.title('Average Diversity Loss across all experiments\nagainst length of $\mu Rank$\'s initial part (' + method_name + ')')
+    plt.xlabel('Length of $\mu Rank$\' initial part')
+    plt.ylabel('Average Diversity Loss')
+    plt.xticks(ticks = x)
+    # plt.yticks(ticks = [-0.5 + i / 20 for i in range(10)])
+    plt.legend()
+    plt.savefig(method_name.lower().replace(' ','_') + '_avg_div_loss.png')
+    plt.close()
 
 if __name__ == '__main__':
     with open('shannon_index_results_small.json', 'r') as file:
         results = json.load(file)
-    # methods = ['Richness', 'Shannon Index', 'Berger Parker Index', 'Hill numbers', 'Simpson Index']
+    methods = ['Richness', 'Shannon Index', 'Berger Parker Index', 'Hill numbers', 'Simpson Index']
+    method_functions = [diversity_metrics.richness, diversity_metrics.shannon_index, diversity_metrics.berger_parker_index, diversity_metrics.hill_numbers, diversity_metrics.simpson_index]
     with open('dataset.json', 'r') as file:
         data = json.load(file)
-    methods = ['Shannon Index']
-    for method in methods:
+    # methods = ['Shannon Index']
+    for i in range(len(methods)):
+        method = methods[i]
         tag = method.lower().replace(' ', '_')
         data_path = tag + '_results_small.json'
         with open(data_path, 'r') as file:
             results = json.load(file)
-        # successful_rankings_plotter(results, method)
-        # successful_rankings_3d_plotter(results, method)
-        # ranking_distance_plotter(results, method)
-        diversity_loss_plotter(results, method, diversity_metrics.shannon_index, )
+        successful_rankings_plotter(results, method)
+        successful_rankings_3d_plotter(results, method)
+        ranking_distance_plotter(results, method)
+        diversity_loss_plotter(results, method, method_functions[i], data)

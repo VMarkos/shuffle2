@@ -18,7 +18,9 @@ def cosine_simlarity(x, y):
     return inner_product(x, y) / (math.sqrt(inner_product(x, x) * inner_product(y, y)))
 
 def richness(class_distribution):
-    return len(class_distribution)
+    size = len(class_distribution)
+    # print(class_distribution)
+    return len([x for x in class_distribution if x > 0]) / size
 
 def berger_parker_index(class_distribution):
     size = sum(class_distribution)
@@ -30,13 +32,18 @@ def simpson_index(class_distribution):
 
 def shannon_index(class_distribution):
     size = sum(class_distribution)
-    return -sum([(x / size) * math.log(x / size) for x in class_distribution if x > 0])
+    denominator = 1
+    if size > 1:
+        denominator = math.log(size)
+    return -sum([(x / size) * math.log(x / size) for x in class_distribution if x > 0]) / denominator
 
 def hill_numbers(class_distribution, q=2):
     size = sum(class_distribution)
+    if (q < 1):
+        return None
     if (q == 1): # Extreme case of Hill numbers
-        return math.exp(shannon_index(class_distribution))
-    return sum([(x / size) ** q for x in class_distribution]) ** (1 / (1 - q))
+        return math.exp(-sum([(x / size) * math.log(x / size) for x in class_distribution if x > 0]))
+    return sum([(x / size) ** q for x in class_distribution]) ** (1 / (1 - q)) / len(class_distribution)
 
 def similarity_diversity(sample, similarity, weights=None):
     n = len(sample)
