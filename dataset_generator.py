@@ -58,14 +58,14 @@ def generate_dataset(N, M, n_min, n_max):
     samples = []
     for i in range(N):
         print('Iteration: ' + str(i))
-        path = 'data/sample_' + str(i)
+        path = 'small_data/sample_' + str(i)
         samples.append(generate_samples(M, n_min, n_max, path))
-    with open('data/dataset.json', 'w') as file:
+    with open('small_data/dataset.json', 'w') as file:
         json.dump(samples, file, indent=2)
 
 if __name__ == '__main__':
-    N = 100
-    M = 10
+    N = 10
+    M = 4
     n_min = 0
-    n_max = 30
+    n_max = 10
     generate_dataset(N, M, n_min, n_max)

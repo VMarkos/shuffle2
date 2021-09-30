@@ -14,11 +14,15 @@ from timeit import default_timer as timer
 def dist(mu, D_mu):
     return abs(mu - D_mu)
 
-def sort_by(mu, D_mu, X, distribution):
-    distances = {}
-    for item in X:
-        distances[item] = dist(mu(distribution), D_mu)
-    return list({x: val for x, val in sorted(distances.items(), key=lambda item: item[1], reverse=True)}.keys())
+def sort_by(mu, D_mu, X, mu_rank, classes):
+    distances = {x: dist(mu(get_distribution(mu_rank + [x], classes)), D_mu) for x in X if x not in mu_rank}
+    return list({x: val for x, val in sorted(distances.items(), key=lambda item: item[1])}.keys())
+
+def get_distribution(points, classes):
+    distribution = [0] * len(classes)
+    for point in points:
+        distribution[classes[str(point[0]) + ',' + str(point[1])]] += 1
+    return distribution
 
 """
 Non recursive Shuffle2:
@@ -35,10 +39,10 @@ While (front != empty && len(X) > len(muRank)):
 
 def shuffle2(sample, d_max, d_div, diversity_metric, crisp_ranking): # NON-recursive version of Shuffle2 algorithm
     X = get_points(sample)
-    class_distribution = sample['classCount']
+    # class_distribution = sample['classCount']
     classes = sample['classes']
     mu_rank = []
-    front = sort_by(diversity_metric, d_div, X, class_distribution)
+    front = sort_by(diversity_metric, d_div, X, mu_rank, classes)
     while (len(front) > 0 and len(X) > len(mu_rank)):
         next_el = front.pop()
         # print('next_el: ', next_el)
@@ -47,7 +51,7 @@ def shuffle2(sample, d_max, d_div, diversity_metric, crisp_ranking): # NON-recur
             mu_rank.pop()
         else:
             class_distribution = update_class_distribution(X, mu_rank, classes)
-            front += sort_by(diversity_metric, d_div, [x for x in X if x not in mu_rank], class_distribution)
+            front += sort_by(diversity_metric, d_div, X, mu_rank, classes)
     if len(X) == len(mu_rank):
         return mu_rank
     return None
@@ -100,14 +104,17 @@ def ell_2_rank(target, xs, ys):
     for i in range(len(xs)):
         point = (xs[i], ys[i])
         distances[point] = ell_2(target, point)
-    return list({x: val for x, val in sorted(distances.items(), key=lambda item: item[1], reverse=True)}.keys())
+    return list({x: val for x, val in sorted(distances.items(), key=lambda item: item[1])}.keys())
 
 def experiment(diversity_metric, data, d_div, d_max):
     results = []
+    # i = 0
     for sample in data:
+        # print(i)
+        # i += 1
         target = sample['target']
         crisp_ranking = ell_2_rank(target, sample['x'], sample['y'])
-        div_ranking = sort_by(diversity_metric, d_div, get_points(sample), sample['classCount'])
+        div_ranking = sort_by(diversity_metric, d_div, get_points(sample), [], sample['classes'])
         start = timer()
         mu_ranking = shuffle2(sample, d_max, d_div, diversity_metric, crisp_ranking)
         end = timer()
@@ -120,6 +127,8 @@ def experiment(diversity_metric, data, d_div, d_max):
             'd_div': d_div,
             'd_max': d_max,
         })
+        # print(target)
+        # print(crisp_ranking)
     return results
 
 def get_points(sample):
@@ -133,19 +142,28 @@ def get_points(sample):
 def set_of_experiments(diversity_metric, metric_id):
     print(metric_id)
     data = []
-    with open('data/dataset.json', 'r') as file:
+    with open('small_data/dataset.json', 'r') as file:
         data = json.load(file)
-    for d_div in range(0,11):
+    results = []
+    for d_div in range(0,21):
         print('d_div: ', d_div)
-        for d_max in range(0,11):
-            print('d_max: ', d_max)
-            results = experiment(diversity_metric, data, d_div / 10, d_max / 10)
-            with open(metric_id + '_results.json', 'w') as file:
-                json.dump(results, file, indent=2)
+        for d_max in range(0,21):
+            # print('d_max: ', d_max)
+            results.append(experiment(diversity_metric, data, d_div / 20, d_max / 20))
+    with open(metric_id + '_results_small.json', 'w') as file:
+        json.dump(results, file, indent=2)
 
 if __name__ == '__main__':
-    # set_of_experiments(diversity_metrics.richness, 'richness')
-    # set_of_experiments(diversity_metrics.shannon_index, 'shannon_index')
-    # set_of_experiments(diversity_metrics.simpson_index, 'simpson_index')
+    # data = []
+    # with open('small_data/dataset.json', 'r') as file:
+    #     data = json.load(file)
+    # d_div = 0.2
+    # d_max = 0.1
+    # results = experiment(diversity_metrics.shannon_index, data[:10], d_div, d_max)
+    # with open('RESULTS.json', 'w') as file:
+    #     json.dump(results, file, indent=2)
+    set_of_experiments(diversity_metrics.richness, 'richness')
+    set_of_experiments(diversity_metrics.shannon_index, 'shannon_index')
+    set_of_experiments(diversity_metrics.simpson_index, 'simpson_index')
     set_of_experiments(diversity_metrics.berger_parker_index, 'berger_parker_index')
     set_of_experiments(diversity_metrics.hill_numbers, 'hill_numbers')
